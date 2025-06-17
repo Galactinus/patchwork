@@ -333,16 +333,27 @@ class Patchwork:
                 shutil.copy2(src_path, b_dst)
 
                 # For tracked files, copy base version to A directory
-                # For untracked files, leave no file in A directory
+                # For untracked files or files not in patchwork_base, leave no file in A directory
                 try:
-                    subprocess.run(
-                        ["git", "show", f"patchwork_base:{file_path}"],
+                    # First check if file exists in patchwork_base
+                    result = subprocess.run(
+                        ["git", "ls-tree", "-r", "--name-only", "patchwork_base", file_path],
                         cwd=target_dir,
-                        stdout=open(a_dst, 'w'),
+                        capture_output=True,
+                        text=True,
                         check=True
                     )
+                    if result.stdout.strip():
+                        # File exists in patchwork_base, copy it
+                        subprocess.run(
+                            ["git", "show", f"patchwork_base:{file_path}"],
+                            cwd=target_dir,
+                            stdout=open(a_dst, 'w'),
+                            check=True
+                        )
+                    # If file doesn't exist in patchwork_base, leave A directory empty
                 except subprocess.CalledProcessError:
-                    # File is untracked, don't create anything in A directory
+                    # File is untracked or not in patchwork_base, don't create anything in A directory
                     pass
 
         print("Creating patch file...")
