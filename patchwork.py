@@ -130,6 +130,11 @@ class Patchwork:
             if not a_dir.exists() or not b_dir.exists():
                 raise ValueError("A and B directories do not exist. Run 'build_patch' first.")
 
+            # Clean target directory before testing
+            print("Cleaning target directory...")
+            subprocess.run(["git", "reset", "--hard", "patchwork_base"], cwd=target_dir, check=True)
+            subprocess.run(["git", "clean", "-fd"], cwd=target_dir, check=True)
+
             # Test the patch directly using diff -Naur in the patches directory
             result = subprocess.run(
                 ["diff", "-Naur", "A", "B"],
@@ -173,6 +178,11 @@ class Patchwork:
             if base_commit != current_commit:
                 raise ValueError("Target directory is not at patchwork_base commit. Use 'clear' first or --force to override.")
 
+            # Clean target directory before applying (only when not using --force)
+            print("Cleaning target directory...")
+            subprocess.run(["git", "reset", "--hard", "patchwork_base"], cwd=target_dir, check=True)
+            subprocess.run(["git", "clean", "-fd"], cwd=target_dir, check=True)
+
         if not self.config["patches"]:
             print("No patch configured. Use 'add_patch' first.")
             return
@@ -208,6 +218,8 @@ class Patchwork:
 
         print("Resetting to patchwork_base tag...")
         subprocess.run(["git", "reset", "--hard", "patchwork_base"], cwd=target_dir, check=True)
+        print("Cleaning untracked files...")
+        subprocess.run(["git", "clean", "-fd"], cwd=target_dir, check=True)
         print("Reset complete")
 
     def cache_patch(self):
@@ -256,7 +268,10 @@ class Patchwork:
         if not target_dir.exists():
             raise ValueError("Target directory does not exist")
 
-        # Get list of changed files
+        # Get list of changed files (both tracked and untracked)
+        changed_files = set()
+
+        # Get tracked changes
         result = subprocess.run(
             ["git", "diff", "--name-only", "patchwork_base"],
             cwd=target_dir,
@@ -264,7 +279,20 @@ class Patchwork:
             text=True,
             check=True
         )
-        changed_files = result.stdout.strip().split('\n')
+        changed_files.update(result.stdout.strip().split('\n'))
+
+        # Get untracked files
+        result = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            cwd=target_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        changed_files.update(result.stdout.strip().split('\n'))
+
+        # Remove empty strings
+        changed_files.discard('')
 
         if not changed_files:
             print("No changes detected")
@@ -304,13 +332,18 @@ class Patchwork:
                 # Copy to B directory (modified version)
                 shutil.copy2(src_path, b_dst)
 
-                # Copy base version to A directory
-                subprocess.run(
-                    ["git", "show", f"patchwork_base:{file_path}"],
-                    cwd=target_dir,
-                    stdout=open(a_dst, 'w'),
-                    check=True
-                )
+                # For tracked files, copy base version to A directory
+                # For untracked files, leave no file in A directory
+                try:
+                    subprocess.run(
+                        ["git", "show", f"patchwork_base:{file_path}"],
+                        cwd=target_dir,
+                        stdout=open(a_dst, 'w'),
+                        check=True
+                    )
+                except subprocess.CalledProcessError:
+                    # File is untracked, don't create anything in A directory
+                    pass
 
         print("Creating patch file...")
 
