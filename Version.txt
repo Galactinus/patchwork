@@ -1,3 +1,8 @@
+1.1.0 - Autocomplete Support
+- Added bash completion for all commands
+- Improved installation script with completion setup
+- Support for command and option autocomplete
+
 1.0.0 - Initial release
 - Basic patch management functionality
 - Git integration for tracking changes
