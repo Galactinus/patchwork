@@ -1,0 +1,5 @@
+1.0.0 - Initial release
+- Basic patch management functionality
+- Git integration for tracking changes
+- Support for caching and deploying patches
+- Build patches from git changes 
