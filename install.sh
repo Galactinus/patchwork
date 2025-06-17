@@ -14,7 +14,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
+# pip install -r $current_dir/requirements.txt
 
 # write a script to run the patchwork.sh script
 current_dir=$(pwd)
