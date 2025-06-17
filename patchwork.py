@@ -15,6 +15,7 @@ class Patchwork:
         self.config_file = self.project_dir / "patchwork.json"
         self.config: Dict[str, Any] = {}
         self._load_config()
+        self.tmp_patch_file_name = "changes.patch"
 
     def _load_config(self):
         if self.config_file.exists():
@@ -116,7 +117,7 @@ class Patchwork:
             print("Patch is not cached. Use 'cache_patch' first.")
             return
 
-        patch_path = self.project_dir / "patches" / Path(patch["path"]).name
+        patch_path = self.project_dir / "patches" / self.tmp_patch_file_name
         if not patch_path.exists():
             print(f"Warning: Cached patch {patch_path} does not exist")
             return
@@ -181,7 +182,7 @@ class Patchwork:
             print("Patch is not cached. Use 'cache_patch' first.")
             return
 
-        patch_path = self.project_dir / "patches" / Path(patch["path"]).name
+        patch_path = self.project_dir / "patches" / self.tmp_patch_file_name
         if not patch_path.exists():
             print(f"Warning: Cached patch {patch_path} does not exist")
             return
@@ -221,7 +222,7 @@ class Patchwork:
 
             cache_dir = self.project_dir / "patches"
             cache_dir.mkdir(exist_ok=True)
-            cached_path = cache_dir / "changes.patch"
+            cached_path = cache_dir / self.tmp_patch_file_name
 
             # Only copy if source and destination are different
             if patch_path.resolve() != cached_path.resolve():
@@ -241,7 +242,7 @@ class Patchwork:
 
             patch_path = Path(patch["path"])
             cache_dir = self.project_dir / "patches"
-            cached_path = cache_dir / "changes.patch"
+            cached_path = cache_dir / self.tmp_patch_file_name
             
             if not cached_path.exists():
                 print(f"Warning: Cached patch {cached_path} does not exist")
@@ -314,7 +315,7 @@ class Patchwork:
         print("Creating patch file...")
 
         # Create patch file using diff -Naur
-        patch_file = patch_dir / "changes.patch"
+        patch_file = patch_dir / self.tmp_patch_file_name
         with open(patch_file, 'w') as f:
             result = subprocess.run(
                 ["diff", "-Naur", "A", "B"],
