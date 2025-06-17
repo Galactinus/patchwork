@@ -39,7 +39,7 @@ if [ ! -d "$USER_COMPLETION_DIR" ]; then
 fi
 
 echo "Installing bash completion to $USER_COMPLETION_DIR"
-cp "$current_dir/patchwork_completion.bash" "$USER_COMPLETION_DIR/patchwork"
+cp "$current_dir/patchwork_completion.bash" "$USER_COMPLETION_DIR/patchwork.bash"
 
 # Source the completion for immediate use
 if [ -f "$current_dir/patchwork_completion.bash" ]; then

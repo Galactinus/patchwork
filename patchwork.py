@@ -221,7 +221,7 @@ class Patchwork:
 
             cache_dir = self.project_dir / "patches"
             cache_dir.mkdir(exist_ok=True)
-            cached_path = cache_dir / patch_path.name
+            cached_path = cache_dir / "changes.patch"
 
             # Only copy if source and destination are different
             if patch_path.resolve() != cached_path.resolve():
@@ -241,8 +241,8 @@ class Patchwork:
 
             patch_path = Path(patch["path"])
             cache_dir = self.project_dir / "patches"
-            cached_path = cache_dir / patch_path.name
-
+            cached_path = cache_dir / "changes.patch"
+            
             if not cached_path.exists():
                 print(f"Warning: Cached patch {cached_path} does not exist")
                 continue
@@ -326,15 +326,7 @@ class Patchwork:
             if result.returncode not in [0, 1]:
                 print(result.stderr)
                 raise subprocess.CalledProcessError(result.returncode, result.args)
-
-        # Update config
-        patch_info = {
-            "path": str(patch_file),
-            "cached": True
-        }
-        self.config["patches"] = [patch_info]
-        self._save_config()
-
+            
         print(f"Built patch at {patch_file}")
 
 def main():
