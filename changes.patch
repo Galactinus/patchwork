@@ -1,0 +1,18 @@
+diff -Naur A/event.py B/event.py
+--- A/event.py	2025-06-17 23:02:43.772725056 +0000
++++ B/event.py	2025-06-17 23:02:13.512257802 +0000
+@@ -21,14 +21,6 @@
+     ) -> None:
+         """Initialize an Event instance.
+ 
+-        Args:
+-            date_val: The date of the event
+-            start_time: The start time of the event
+-            end_time: The end time of the event
+-            title: The event title/description
+-            event_id: Unique identifier for the event
+-            is_system_managed: Whether the event is managed by the system
+-            timezone: The timezone for the event (defaults to Mountain Time)
+         """
+         self.date: date = date_val
+         self.start_time: time = start_time

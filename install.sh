@@ -1,8 +1,16 @@
 #!/bin/bash
-#verify that we have one argument
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <patchwork.py>"
-    exit 1
+
+
+# Look for patchwork on the path, if not found, verify that we have one argument
+if ! command -v patchwork &> /dev/null; then
+    if [ $# -ne 1 ]; then
+        echo "Usage: $0 <patchwork.py>"
+        exit 1
+    fi
+    INSTALL_EXE=$1
+else
+    INSTALL_EXE="$(which patchwork)"
+    echo installing to $INSTALL_EXE
 fi
 
 INSTALL_EXE=$1

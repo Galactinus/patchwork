@@ -8,7 +8,7 @@ _patchwork_completion() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     
     # Available commands
-    local commands="init add_patch test apply clear cache_patch deploy_patch build_patch"
+    local commands="init add_patch test apply clear cache_patch deploy_patch build_patch check_for_updates"
     
     # Available options
     local options="--force --help"
@@ -37,7 +37,7 @@ _patchwork_completion() {
                 COMPREPLY=($(compgen -W "--force" -- ${cur}))
             fi
             ;;
-        test|clear|cache_patch|deploy_patch|build_patch)
+        test|clear|cache_patch|deploy_patch|build_patch|check_for_updates)
             # These commands don't take additional arguments
             ;;
         *)

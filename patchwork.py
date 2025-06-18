@@ -10,8 +10,19 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 class Patchwork:
-    def __init__(self, project_dir: str):
-        self.project_dir = Path(project_dir)
+    def __init__(self, current_dir: str):
+        # go up file tree until we find a patchwork.json file unless the command is init
+        commands_that_dont_require_project_dir = ["init", "check_for_updates"]
+        if any(cmd in sys.argv for cmd in commands_that_dont_require_project_dir):
+            self.project_dir = Path(current_dir)
+        else:
+            self.project_dir = Path(current_dir)
+            while not (self.project_dir / "patchwork.json").exists():
+                self.project_dir = self.project_dir.parent
+                if self.project_dir == Path("/"):
+                    print("unable to find a patchwork project directory in your current directory or any parent directories. exiting.")
+                    sys.exit(1)
+
         self.config_file = self.project_dir / "patchwork.json"
         self.config: Dict[str, Any] = {}
         self._load_config()
@@ -49,6 +60,9 @@ class Patchwork:
 
             if not target_path.is_dir():
                 raise ValueError(f"{target_dir} is not a directory")
+            # check if target directory is only one level above the working directory
+            if target_path.parent == self.project_dir:
+                raise ValueError("Target directory must be one level above the working directory")
 
             self.config["target_dir"] = str(target_path)
 
@@ -90,7 +104,8 @@ class Patchwork:
             print("Existing git repository detected and tagged as patchwork_base")
 
     def add_patch(self, patch_path: str):
-        patch_path = Path(patch_path)
+        # Convert to absolute path if relative
+        patch_path = Path(patch_path).resolve()
         if not patch_path.exists():
             raise ValueError(f"Patch file {patch_path} does not exist")
 
@@ -151,6 +166,10 @@ class Patchwork:
         except Exception as e:
             print(f"Error testing patch: {e}")
             raise
+    def check_for_updates(self):
+        install_dir = Path(sys.executable).parent
+        print(f"Checking for updates in {install_dir}")
+        exit(0)
 
     def apply(self, force: bool = False):
         target_dir = Path(self.config["target_dir"])
@@ -378,7 +397,7 @@ def main():
     parser = argparse.ArgumentParser(description="Patchwork - Patch Management Tool")
     parser.add_argument("command", choices=[
         "init", "add_patch", "test", "apply", "clear",
-        "cache_patch", "deploy_patch", "build_patch"
+        "cache_patch", "deploy_patch", "build_patch", "check_for_updates"
     ])
     parser.add_argument("args", nargs="*", help="Command arguments")
     parser.add_argument("--force", action="store_true", help="Force apply patch without checking base tag")
@@ -386,8 +405,8 @@ def main():
     args = parser.parse_args()
 
     # Get current directory as project directory
-    project_dir = os.getcwd()
-    patchwork = Patchwork(project_dir)
+    cwd = os.getcwd()
+    patchwork = Patchwork(cwd)
 
     try:
         if args.command == "init":
@@ -408,6 +427,8 @@ def main():
             patchwork.deploy_patch()
         elif args.command == "build_patch":
             patchwork.build_patch()
+        elif args.command == "check_for_updates":
+            patchwork.check_for_updates()
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
