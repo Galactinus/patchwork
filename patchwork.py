@@ -61,7 +61,7 @@ class Patchwork:
             if not target_path.is_dir():
                 raise ValueError(f"{target_dir} is not a directory")
             # check if target directory is only one level above the working directory
-            if target_path.parent == self.project_dir:
+            if target_path.parent != self.project_dir:
                 raise ValueError("Target directory must be one level above the working directory")
 
             self.config["target_dir"] = str(target_path)
